@@ -1,0 +1,850 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String               @id @default(uuid()) @db.Uuid
+  username              String               @unique @db.VarChar(50)
+  gameNickname          String?              @map("game_nickname") @db.VarChar(50)
+  email                 String?              @unique @db.VarChar(255)
+  passwordHash          String               @map("password_hash") @db.VarChar(255)
+  role                  UserRole             @default(USER)
+  avatarUrl             String?              @map("avatar_url")
+  uniqueId              String?              @unique @map("unique_id") @db.VarChar(20)
+  isDefaultPassword     Boolean              @default(true) @map("is_default_password")
+  requirePasswordChange Boolean              @default(false) @map("require_password_change")
+  isActive              Boolean              @default(true) @map("is_active")
+  emailVerified         Boolean              @default(false) @map("email_verified")
+  twoFactorEnabled      Boolean              @default(false) @map("two_factor_enabled")
+  lastLoginAt           DateTime?            @map("last_login_at") @db.Timestamptz(6)
+  createdAt             DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy             String?              @map("created_by") @db.Uuid
+
+  circle_members        circle_members[]
+  circle_posts          circle_posts[]
+  circles               circles[]
+  commentLikes          CommentLike[]        @relation("CommentLikes")
+  comments              Comment[]            @relation("CommentAuthor")
+  dataBackups           DataBackup[]         @relation("DataBackupCreator")
+  favorites             Favorite[]           @relation("UserFavorites")
+  forumPosts            ForumPost[]          @relation("ForumPostAuthor")
+  forumReplies          ForumReply[]         @relation("ForumReplyAuthor")
+  operationLogs         OperationLog[]       @relation("OperationLogs")
+  passwordResetTokens   PasswordResetToken[] @relation("UserPasswordResetTokens")
+  postLikes             PostLike[]           @relation("PostLikes")
+  posts                 Post[]               @relation("PostAuthor")
+  replyLikes            ReplyLike[]          @relation("ReplyLikes")
+  reportsHandled        Report[]             @relation("ReportHandler")
+  reportsReceived       Report[]             @relation("ReportedUser")
+  reportsMade           Report[]             @relation("ReportReporter")
+  traces                TemplateTrace[]      @relation("UserTraces")
+  templates             Template[]           @relation("UserTemplates")
+  privacySettings       UserPrivacySettings?
+  profile               UserProfile?
+  userSessions          UserSession[]        @relation("UserSessions")
+  stats                 UserStats?
+  creator               User?                @relation("UserCreator", fields: [createdBy], references: [id])
+  createdUsers          User[]               @relation("UserCreator")
+
+  @@map("users")
+}
+
+model UserProfile {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @unique @map("user_id") @db.Uuid
+  bio        String?
+  location   String?   @db.VarChar(100)
+  website    String?   @db.VarChar(255)
+  birthday   DateTime? @db.Date
+  onlineTime Int       @default(0) @map("online_time")
+  joinedAt   DateTime  @default(now()) @map("joined_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  avatar     String?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model UserStats {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @map("user_id") @db.Uuid
+  followersCount Int      @default(0) @map("followers_count")
+  followingCount Int      @default(0) @map("following_count")
+  likesReceived  Int      @default(0) @map("likes_received")
+  postsCount     Int      @default(0) @map("posts_count")
+  repliesCount   Int      @default(0) @map("replies_count")
+  lastActiveAt   DateTime @default(now()) @map("last_active_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_stats")
+}
+
+model UserPrivacySettings {
+  id                  String   @id @default(uuid()) @db.Uuid
+  userId              String   @unique @map("user_id") @db.Uuid
+  showProfile         Boolean  @default(true) @map("show_profile")
+  showStats           Boolean  @default(true) @map("show_stats")
+  showOnlineTime      Boolean  @default(true) @map("show_online_time")
+  showPokemonShowcase Boolean  @default(true) @map("show_pokemon_showcase")
+  showTeamShowcase    Boolean  @default(true) @map("show_team_showcase")
+  showActivity        Boolean  @default(true) @map("show_activity")
+  allowFollow         Boolean  @default(true) @map("allow_follow")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_privacy_settings")
+}
+
+model EmailVerificationCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  email     String    @db.VarChar(255)
+  username  String    @db.VarChar(50)
+  code      String    @db.VarChar(6)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  isUsed    Boolean   @default(false) @map("is_used")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+
+  @@map("email_verification_codes")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @unique @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  isUsed    Boolean   @default(false) @map("is_used")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  user      User      @relation("UserPasswordResetTokens", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model UserSession {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  refreshToken String   @unique @map("refresh_token") @db.VarChar(255)
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastUsedAt   DateTime @default(now()) @map("last_used_at") @db.Timestamptz(6)
+  user         User     @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model ForumCategory {
+  id            String      @id @default(uuid()) @db.Uuid
+  name          String      @db.VarChar(100)
+  description   String?
+  icon          String?     @db.VarChar(50)
+  color         String?     @db.VarChar(7)
+  postCount     Int         @default(0) @map("post_count")
+  lastPostAt    DateTime?   @map("last_post_at") @db.Timestamptz(6)
+  lastPostTitle String?     @map("last_post_title") @db.VarChar(255)
+  orderIndex    Int         @map("order_index")
+  isActive      Boolean     @default(true) @map("is_active")
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  posts         ForumPost[]
+
+  @@map("forum_categories")
+}
+
+model ForumPost {
+  id           String           @id @default(uuid()) @db.Uuid
+  title        String           @db.VarChar(255)
+  content      String
+  type         ForumPostType
+  authorId     String           @map("author_id") @db.Uuid
+  authorName   String           @map("author_name") @db.VarChar(50)
+  authorAvatar String?          @map("author_avatar")
+  authorRole   String?          @map("author_role") @db.VarChar(20)
+  categoryId   String?          @map("category_id") @db.Uuid
+  status       PostStatus       @default(ACTIVE)
+  isSticky     Boolean          @default(false) @map("is_sticky")
+  isLocked     Boolean          @default(false) @map("is_locked")
+  viewCount    Int              @default(0) @map("view_count")
+  likeCount    Int              @default(0) @map("like_count")
+  replyCount   Int              @default(0) @map("reply_count")
+  lastReplyAt  DateTime?        @map("last_reply_at") @db.Timestamptz(6)
+  lastReplyBy  String?          @map("last_reply_by") @db.VarChar(50)
+  tags         String[]
+  rentalInfo   Json?            @map("rental_info")
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  author       User             @relation("ForumPostAuthor", fields: [authorId], references: [id])
+  category     ForumCategory?   @relation(fields: [categoryId], references: [id])
+  replies      ForumReply[]
+  attachments  PostAttachment[]
+  likes        PostLike[]
+
+  @@map("forum_posts")
+}
+
+model PostAttachment {
+  id           String         @id @default(uuid()) @db.Uuid
+  postId       String         @map("post_id") @db.Uuid
+  type         AttachmentType
+  url          String
+  filename     String         @db.VarChar(255)
+  size         BigInt
+  mimeType     String         @map("mime_type") @db.VarChar(100)
+  thumbnailUrl String?        @map("thumbnail_url")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  post         ForumPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("post_attachments")
+}
+
+model ForumReply {
+  id             String       @id @default(uuid()) @db.Uuid
+  postId         String       @map("post_id") @db.Uuid
+  content        String
+  authorId       String       @map("author_id") @db.Uuid
+  authorName     String       @map("author_name") @db.VarChar(50)
+  authorAvatar   String?      @map("author_avatar")
+  authorRole     String?      @map("author_role") @db.VarChar(20)
+  parentReplyId  String?      @map("parent_reply_id") @db.Uuid
+  likeCount      Int          @default(0) @map("like_count")
+  isDeleted      Boolean      @default(false) @map("is_deleted")
+  rentalResponse Json?        @map("rental_response")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  author         User         @relation("ForumReplyAuthor", fields: [authorId], references: [id])
+  parentReply    ForumReply?  @relation("ReplyToReply", fields: [parentReplyId], references: [id])
+  childReplies   ForumReply[] @relation("ReplyToReply")
+  post           ForumPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  likes          ReplyLike[]
+
+  @@map("forum_replies")
+}
+
+model PostLike {
+  id          String     @id @default(uuid()) @db.Uuid
+  postId      String     @map("post_id") @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  post        Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user        User       @relation("PostLikes", fields: [userId], references: [id], onDelete: Cascade)
+  ForumPost   ForumPost? @relation(fields: [forumPostId], references: [id])
+  forumPostId String?    @db.Uuid
+
+  @@unique([postId, userId])
+  @@map("post_likes")
+}
+
+model ReplyLike {
+  id        String     @id @default(uuid()) @db.Uuid
+  replyId   String     @map("reply_id") @db.Uuid
+  userId    String     @map("user_id") @db.Uuid
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  reply     ForumReply @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  user      User       @relation("ReplyLikes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([replyId, userId])
+  @@map("reply_likes")
+}
+
+model SystemLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  level     LogLevel
+  message   String
+  meta      Json?
+  userId    String?  @map("user_id") @db.Uuid
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("system_logs")
+}
+
+model ForumActivity {
+  id                   String                @id @default(uuid()) @db.Uuid
+  title                String                @db.VarChar(255)
+  description          String
+  type                 ActivityType
+  status               ActivityStatus        @default(ACTIVE)
+  startTime            DateTime              @map("start_time") @db.Timestamptz(6)
+  endTime              DateTime              @map("end_time") @db.Timestamptz(6)
+  registrationDeadline DateTime              @map("registration_deadline") @db.Timestamptz(6)
+  location             String?               @db.VarChar(255)
+  maxParticipants      Int?                  @map("max_participants")
+  currentParticipants  Int                   @default(0) @map("current_participants")
+  rewards              Json?
+  restrictions         Json?
+  organizerId          String                @map("organizer_id") @db.Uuid
+  organizerName        String                @map("organizer_name") @db.VarChar(50)
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  participants         ActivityParticipant[]
+
+  @@map("forum_activities")
+}
+
+model ActivityParticipant {
+  id           String            @id @default(uuid()) @db.Uuid
+  activityId   String            @map("activity_id") @db.Uuid
+  userId       String            @map("user_id") @db.Uuid
+  userName     String            @map("user_name") @db.VarChar(50)
+  userAvatar   String?           @map("user_avatar")
+  userRole     String            @map("user_role") @db.VarChar(20)
+  status       ParticipantStatus @default(REGISTERED)
+  registeredAt DateTime          @default(now()) @map("registered_at") @db.Timestamptz(6)
+  updatedAt    DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  activity     ForumActivity     @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@map("activity_participants")
+}
+
+model OperationLog {
+  id          String          @id @default(uuid()) @db.Uuid
+  operatorId  String          @map("operator_id") @db.Uuid
+  action      OperationAction
+  module      OperationModule
+  description String
+  targetId    String?         @map("target_id") @db.Uuid
+  targetType  String?         @map("target_type") @db.VarChar(50)
+  oldData     Json?           @map("old_data")
+  newData     Json?           @map("new_data")
+  ipAddress   String?         @map("ip_address") @db.VarChar(45)
+  userAgent   String?         @map("user_agent")
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  operator    User            @relation("OperationLogs", fields: [operatorId], references: [id])
+
+  @@map("operation_logs")
+}
+
+model SystemSetting {
+  id          String      @id @default(uuid()) @db.Uuid
+  category    String      @db.VarChar(50)
+  key         String      @db.VarChar(100)
+  value       String
+  type        SettingType @default(string)
+  description String?
+  isPublic    Boolean     @default(false) @map("is_public")
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([category, key])
+  @@map("system_settings")
+}
+
+model SensitiveWord {
+  id          String                @id @default(uuid()) @db.Uuid
+  word        String                @unique @db.VarChar(100)
+  category    SensitiveWordCategory
+  replacement String?               @db.VarChar(100)
+  level       Int                   @default(1)
+  isActive    Boolean               @default(true) @map("is_active")
+  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("sensitive_words")
+}
+
+model Report {
+  id             String         @id @default(uuid()) @db.Uuid
+  reporterId     String         @map("reporter_id") @db.Uuid
+  reportedUserId String?        @map("reported_user_id") @db.Uuid
+  targetId       String         @map("target_id") @db.Uuid
+  targetType     ReportType
+  category       ReportCategory
+  reason         String
+  description    String?
+  evidenceUrls   String[]       @map("evidence_urls")
+  status         ReportStatus   @default(PENDING)
+  result         ReportResult?
+  handlerId      String?        @map("handler_id") @db.Uuid
+  handlerReason  String?        @map("handler_reason")
+  action         String?
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  handledAt      DateTime?      @map("handled_at") @db.Timestamptz(6)
+  handler        User?          @relation("ReportHandler", fields: [handlerId], references: [id])
+  reportedUser   User?          @relation("ReportedUser", fields: [reportedUserId], references: [id])
+  reporter       User           @relation("ReportReporter", fields: [reporterId], references: [id])
+
+  @@map("reports")
+}
+
+
+
+model DataBackup {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?
+  filePath    String   @map("file_path")
+  fileSize    BigInt   @map("file_size")
+  backupType  String   @default("full") @map("backup_type") @db.VarChar(50)
+  status      String   @default("completed") @db.VarChar(20)
+  createdBy   String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  creator     User     @relation("DataBackupCreator", fields: [createdBy], references: [id])
+
+  @@map("data_backups")
+}
+
+model Post {
+  id         String     @id @default(uuid()) @db.Uuid
+  title      String     @db.VarChar(255)
+  content    String
+  authorId   String     @map("author_id") @db.Uuid
+  authorName String     @map("author_name") @db.VarChar(50)
+  status     PostStatus @default(ACTIVE)
+  viewCount  Int        @default(0) @map("view_count")
+  likeCount  Int        @default(0) @map("like_count")
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  comments   Comment[]
+  likes      PostLike[]
+  author     User       @relation("PostAuthor", fields: [authorId], references: [id])
+
+  @@map("posts")
+}
+
+model Comment {
+  id         String        @id @default(uuid()) @db.Uuid
+  postId     String        @map("post_id") @db.Uuid
+  content    String
+  authorId   String        @map("author_id") @db.Uuid
+  authorName String        @map("author_name") @db.VarChar(50)
+  likeCount  Int           @default(0) @map("like_count")
+  status     PostStatus    @default(ACTIVE)
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  likes      CommentLike[]
+  author     User          @relation("CommentAuthor", fields: [authorId], references: [id])
+  post       Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model CommentLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  commentId String   @map("comment_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation("CommentLikes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@map("comment_likes")
+}
+
+model Pokemon {
+  id           Int        @id
+  nameChinese  String     @map("name_chinese") @db.VarChar(100)
+  nameEnglish  String     @map("name_english") @db.VarChar(100)
+  nameJapanese String     @map("name_japanese") @db.VarChar(100)
+  types        Json
+  baseStats    Json       @map("base_stats")
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  templates    Template[]
+
+  @@index([nameChinese])
+  @@index([types], type: Gin)
+  @@map("pokemon")
+}
+
+model Template {
+  id            String          @id @default(uuid()) @db.Uuid
+  userId        String          @map("user_id") @db.Uuid
+  pokemonId     Int             @map("pokemon_id")
+  name          String          @db.VarChar(200)
+  level         Int             @db.SmallInt
+  nature        String          @db.VarChar(50)
+  ability       String?         @db.VarChar(100)
+  item          String?         @db.VarChar(100)
+  abilityType   String?         @map("ability_type") @db.VarChar(20)
+  abilityName   String?         @map("ability_name") @db.VarChar(100)
+  templateType  String?         @map("template_type") @db.VarChar(20)
+  abilityData   Json?           @map("ability_data") @db.Json
+  ivs           Json?           @db.Json
+  evs           Json?           @db.Json
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  usageCount    Int             @default(0) @map("usage_count")
+  dataHash      String          @map("data_hash") @db.VarChar(64)
+  isEdited      Boolean         @default(false) @map("is_edited")
+  traceId       String?         @unique @map("trace_id") @db.VarChar(20)
+  versionNumber Int             @default(1) @map("version_number")
+  favorites     Favorite[]
+  moves         TemplateMove[]
+  traces        TemplateTrace[]
+  pokemon       Pokemon         @relation(fields: [pokemonId], references: [id])
+  user          User            @relation("UserTemplates", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dataHash])
+  @@index([userId])
+  @@index([pokemonId])
+  @@index([createdAt(sort: Desc)])
+  @@index([usageCount(sort: Desc)])
+  @@index([dataHash])
+  @@index([traceId])
+  @@index([versionNumber])
+  @@index([abilityType])
+  @@index([templateType])
+  @@map("templates")
+}
+
+model TemplateMove {
+  id           String   @id @default(uuid()) @db.Uuid
+  templateId   String   @map("template_id") @db.Uuid
+  moveId       Int      @map("move_id")
+  moveName     String   @map("move_name") @db.VarChar(100)
+  moveCategory String   @map("move_category") @db.VarChar(50)
+  position     Int      @db.SmallInt
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  template     Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, position])
+  @@index([templateId])
+  @@map("template_moves")
+}
+
+model Favorite {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  templateId String   @map("template_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user       User     @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templateId])
+  @@index([userId])
+  @@index([templateId])
+  @@map("favorites")
+}
+
+model StaticDataCache {
+  id          String   @id @default(uuid()) @db.Uuid
+  dataType    String   @unique @map("data_type") @db.VarChar(50)
+  dataContent Json     @map("data_content")
+  lastUpdated DateTime @default(now()) @map("last_updated") @db.Timestamptz(6)
+
+  @@map("static_data_cache")
+}
+
+model SnowflakeConfig {
+  id            String   @id @default(uuid()) @db.Uuid
+  nodeId        Int      @unique @map("node_id")
+  datacenterId  Int      @map("datacenter_id")
+  machineId     Int      @map("machine_id")
+  lastTimestamp BigInt   @default(0) @map("last_timestamp")
+  sequence      Int      @default(0)
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([nodeId])
+  @@index([isActive])
+  @@map("snowflake_config")
+}
+
+model TemplateTrace {
+  id            String             @id @default(uuid()) @db.Uuid
+  traceId       String             @unique @map("trace_id") @db.VarChar(20)
+  templateId    String             @map("template_id") @db.Uuid
+  userId        String             @map("user_id") @db.Uuid
+  operationType String             @map("operation_type") @db.VarChar(20)
+  operationTime DateTime           @map("operation_time") @db.Timestamptz(6)
+  snapshotData  Json?              @map("snapshot_data")
+  changeSummary Json?              @map("change_summary")
+  ipAddress     String?            @map("ip_address") @db.Inet
+  userAgent     String?            @map("user_agent")
+  status        String             @default("ACTIVE") @db.VarChar(20)
+  frozenUntil   DateTime?          @map("frozen_until") @db.Timestamptz(6)
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  snapshots     TemplateSnapshot[]
+  template      Template           @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user          User               @relation("UserTraces", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([traceId])
+  @@index([templateId])
+  @@index([userId])
+  @@index([operationTime(sort: Desc)])
+  @@index([status])
+  @@index([frozenUntil])
+  @@map("template_traces")
+}
+
+model TemplateSnapshot {
+  id             String        @id @default(uuid()) @db.Uuid
+  traceId        String        @map("trace_id") @db.VarChar(20)
+  templateId     String        @map("template_id") @db.Uuid
+  versionNumber  Int           @map("version_number")
+  snapshotData   Json          @map("snapshot_data")
+  dataHash       String        @map("data_hash") @db.VarChar(64)
+  compressedData Bytes?        @map("compressed_data")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  trace          TemplateTrace @relation(fields: [traceId], references: [traceId], onDelete: Cascade)
+
+  @@index([traceId])
+  @@index([templateId])
+  @@index([templateId, versionNumber])
+  @@index([dataHash])
+  @@map("template_snapshots")
+}
+
+model circle_members {
+  id        String   @id @db.Uuid
+  circle_id String   @db.Uuid
+  user_id   String   @db.Uuid
+  role      String   @default("member") @db.VarChar(20)
+  joined_at DateTime @default(now()) @db.Timestamptz(6)
+  circles   circles  @relation(fields: [circle_id], references: [id], onDelete: Cascade)
+  users     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([circle_id, user_id])
+}
+
+model circle_posts {
+  id         String     @id @db.Uuid
+  circle_id  String     @db.Uuid
+  author_id  String     @db.Uuid
+  title      String     @db.VarChar(255)
+  content    String
+  status     PostStatus @default(ACTIVE)
+  view_count Int        @default(0)
+  like_count Int        @default(0)
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at DateTime   @db.Timestamptz(6)
+  users      User       @relation(fields: [author_id], references: [id])
+  circles    circles    @relation(fields: [circle_id], references: [id], onDelete: Cascade)
+}
+
+model circles {
+  id             String           @id @db.Uuid
+  name           String           @db.VarChar(100)
+  description    String?
+  avatar         String?
+  cover_image    String?
+  status         circle_status    @default(active)
+  is_private     Boolean          @default(false)
+  member_count   Int              @default(0)
+  post_count     Int              @default(0)
+  creator_id     String           @db.Uuid
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime         @db.Timestamptz(6)
+  circle_members circle_members[]
+  circle_posts   circle_posts[]
+  users          User             @relation(fields: [creator_id], references: [id])
+}
+
+enum UserRole {
+  MODERATOR @map("moderator")
+  USER      @map("user")
+  MEMBER    @map("member")
+
+  @@map("user_role")
+}
+
+enum ForumPostType {
+  DISCUSSION     @map("discussion")
+  POKEMON_RENTAL @map("pokemon_rental")
+  EVENT          @map("event")
+
+  @@map("forum_post_type")
+}
+
+enum PostStatus {
+  PENDING  @map("pending")
+  ACTIVE   @map("active")
+  REJECTED @map("rejected")
+  CLOSED   @map("closed")
+  DELETED  @map("deleted")
+
+  @@map("post_status")
+}
+
+enum AttachmentType {
+  IMAGE @map("image")
+  VIDEO @map("video")
+  FILE  @map("file")
+
+  @@map("attachment_type")
+}
+
+enum LogLevel {
+  ERROR
+  WARN
+  INFO
+  DEBUG
+
+  @@map("log_level")
+}
+
+enum ActivityType {
+  TOURNAMENT  @map("tournament")
+  WORKSHOP    @map("workshop")
+  MEETUP      @map("meetup")
+  COMPETITION @map("competition")
+  EVENT       @map("event")
+
+  @@map("activity_type")
+}
+
+enum ActivityStatus {
+  ACTIVE    @map("active")
+  COMPLETED @map("completed")
+  CANCELLED @map("cancelled")
+  EXPIRED   @map("expired")
+
+  @@map("activity_status")
+}
+
+enum ParticipantStatus {
+  REGISTERED @map("registered")
+  CONFIRMED  @map("confirmed")
+  CANCELLED  @map("cancelled")
+  COMPLETED  @map("completed")
+
+  @@map("participant_status")
+}
+
+enum OperationAction {
+  CREATE_USER              @map("CREATE_USER")
+  UPDATE_USER              @map("UPDATE_USER")
+  DELETE_USER              @map("DELETE_USER")
+  UPDATE_USER_STATUS       @map("UPDATE_USER_STATUS")
+  RESET_USER_PASSWORD      @map("RESET_USER_PASSWORD")
+  CREATE_POST              @map("CREATE_POST")
+  UPDATE_POST              @map("UPDATE_POST")
+  DELETE_POST              @map("DELETE_POST")
+  UPDATE_POST_STATUS       @map("UPDATE_POST_STATUS")
+  PIN_POST                 @map("PIN_POST")
+  UNPIN_POST               @map("UNPIN_POST")
+  CREATE_CIRCLE            @map("CREATE_CIRCLE")
+  UPDATE_CIRCLE            @map("UPDATE_CIRCLE")
+  DELETE_CIRCLE            @map("DELETE_CIRCLE")
+  UPDATE_CIRCLE_STATUS     @map("UPDATE_CIRCLE_STATUS")
+  CREATE_CHANNEL           @map("CREATE_CHANNEL")
+  UPDATE_CHANNEL           @map("UPDATE_CHANNEL")
+  DELETE_CHANNEL           @map("DELETE_CHANNEL")
+  CREATE_COMMENT           @map("CREATE_COMMENT")
+  UPDATE_COMMENT           @map("UPDATE_COMMENT")
+  DELETE_COMMENT           @map("DELETE_COMMENT")
+  UPDATE_COMMENT_STATUS    @map("UPDATE_COMMENT_STATUS")
+  CHANGE_PASSWORD          @map("CHANGE_PASSWORD")
+  UPDATE_SYSTEM_SETTINGS   @map("UPDATE_SYSTEM_SETTINGS")
+  ADD_SENSITIVE_WORD       @map("ADD_SENSITIVE_WORD")
+  UPDATE_SENSITIVE_WORD    @map("UPDATE_SENSITIVE_WORD")
+  DELETE_SENSITIVE_WORD    @map("DELETE_SENSITIVE_WORD")
+  HANDLE_REPORT            @map("HANDLE_REPORT")
+  BATCH_UPDATE_POST_STATUS @map("BATCH_UPDATE_POST_STATUS")
+  BATCH_UPDATE_USER_STATUS @map("BATCH_UPDATE_USER_STATUS")
+  BACKUP_DATABASE          @map("BACKUP_DATABASE")
+  RESTORE_DATABASE         @map("RESTORE_DATABASE")
+  CLEAR_CACHE              @map("CLEAR_CACHE")
+  SEND_NOTIFICATION        @map("SEND_NOTIFICATION")
+  EXPORT_DATA              @map("EXPORT_DATA")
+  IMPORT_DATA              @map("IMPORT_DATA")
+  OTHER                    @map("OTHER")
+
+  @@map("operation_action")
+}
+
+enum OperationModule {
+  AUTH         @map("AUTH")
+  USER         @map("USER")
+  CONTENT      @map("CONTENT")
+  SYSTEM       @map("SYSTEM")
+  ANALYTICS    @map("ANALYTICS")
+  SECURITY     @map("SECURITY")
+  BACKUP       @map("BACKUP")
+  NOTIFICATION @map("NOTIFICATION")
+  OTHER        @map("OTHER")
+
+  @@map("operation_module")
+}
+
+enum SettingType {
+  string  @map("string")
+  number  @map("number")
+  boolean @map("boolean")
+  json    @map("json")
+  text    @map("text")
+
+  @@map("setting_type")
+}
+
+enum SensitiveWordCategory {
+  PROFANITY      @map("PROFANITY")
+  SPAM           @map("SPAM")
+  POLITICAL      @map("POLITICAL")
+  VIOLENCE       @map("VIOLENCE")
+  ADULT          @map("ADULT")
+  DISCRIMINATION @map("DISCRIMINATION")
+  HARASSMENT     @map("HARASSMENT")
+  ILLEGAL        @map("ILLEGAL")
+  CUSTOM         @map("CUSTOM")
+  OTHER          @map("OTHER")
+
+  @@map("sensitive_word_category")
+}
+
+enum ReportStatus {
+  PENDING    @map("PENDING")
+  PROCESSING @map("PROCESSING")
+  RESOLVED   @map("RESOLVED")
+  REJECTED   @map("REJECTED")
+  CLOSED     @map("CLOSED")
+
+  @@map("report_status")
+}
+
+enum ReportType {
+  POST            @map("POST")
+  COMMENT         @map("COMMENT")
+  USER            @map("USER")
+  CHANNEL_MESSAGE @map("CHANNEL_MESSAGE")
+  OTHER           @map("OTHER")
+
+  @@map("report_type")
+}
+
+enum ReportCategory {
+  SPAM                  @map("SPAM")
+  HARASSMENT            @map("HARASSMENT")
+  INAPPROPRIATE_CONTENT @map("INAPPROPRIATE_CONTENT")
+  VIOLENCE              @map("VIOLENCE")
+  HATE_SPEECH           @map("HATE_SPEECH")
+  MISINFORMATION        @map("MISINFORMATION")
+  COPYRIGHT             @map("COPYRIGHT")
+  PRIVACY               @map("PRIVACY")
+  FRAUD                 @map("FRAUD")
+  OTHER                 @map("OTHER")
+
+  @@map("report_category")
+}
+
+enum ReportResult {
+  NO_ACTION       @map("NO_ACTION")
+  WARNING         @map("WARNING")
+  CONTENT_REMOVED @map("CONTENT_REMOVED")
+  USER_SUSPENDED  @map("USER_SUSPENDED")
+  USER_BANNED     @map("USER_BANNED")
+  OTHER           @map("OTHER")
+
+  @@map("report_result")
+}
+
+enum circle_status {
+  active
+  inactive
+  deleted
+}

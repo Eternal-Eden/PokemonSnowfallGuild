@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "buildTime": "2024-01-15T10:00:00.000Z",
+  "updatePolicy": {
+    "checkInterval": 300000,
+    "autoCheck": true,
+    "forceUpdate": false,
+    "updateTypes": {
+      "major": {
+        "priority": "critical",
+        "forceRefresh": true,
+        "showChangelog": true
+      },
+      "minor": {
+        "priority": "important",
+        "forceRefresh": false,
+        "showChangelog": true
+      },
+      "patch": {
+        "priority": "normal",
+        "forceRefresh": false,
+        "showChangelog": false
+      }
+    }
+  },
+  "changelog": {
+    "1.0.0": {
+      "date": "2024-01-15",
+      "type": "major",
+      "title": "初始版本发布",
+      "description": "落雪公会宝可梦社区平台正式上线",
+      "features": [
+        "用户认证系统",
+        "论坛功能",
+        "圈子系统",
+        "宝可梦展示",
+        "个人主页"
+      ],
+      "fixes": [],
+      "breaking": []
+    }
+  },
+  "api": {
+    "versionEndpoint": "/api/version",
+    "updateCheckEndpoint": "/api/update/check"
+  }
+}

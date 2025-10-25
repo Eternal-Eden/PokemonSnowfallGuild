@@ -1,0 +1,176 @@
+natures:
+  - name: 勤奋
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 1.0
+  - name: 怕寂寞
+    HP: 1.0
+    Attack: 1.1
+    Defense: 0.9
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 1.0
+  - name: 勇敢
+    HP: 1.0
+    Attack: 1.1
+    Defense: 1.0
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 0.9
+  - name: 固执
+    HP: 1.0
+    Attack: 1.1
+    Defense: 1.0
+    Sp_Attack: 0.9
+    Sp_Defense: 1.0
+    Speed: 1.0
+  - name: 顽皮
+    HP: 1.0
+    Attack: 1.1
+    Defense: 1.0
+    Sp_Attack: 1.0
+    Sp_Defense: 0.9
+    Speed: 1.0
+  - name: 大胆
+    HP: 1.0
+    Attack: 0.9
+    Defense: 1.1
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 1.0
+  - name: 坦率
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 1.0
+  - name: 悠闲
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.1
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 0.9
+  - name: 淘气
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.1
+    Sp_Attack: 0.9
+    Sp_Defense: 1.0
+    Speed: 1.0
+  - name: 懒散
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.1
+    Sp_Attack: 1.0
+    Sp_Defense: 0.9
+    Speed: 1.0
+  - name: 胆小
+    HP: 1.0
+    Attack: 0.9
+    Defense: 1.0
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 1.1
+  - name: 急躁
+    HP: 1.0
+    Attack: 1.0
+    Defense: 0.9
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 1.1
+  - name: 认真
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 1.0
+  - name: 开朗
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 0.9
+    Sp_Defense: 1.0
+    Speed: 1.1
+  - name: 天真
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 1.0
+    Sp_Defense: 0.9
+    Speed: 1.1
+  - name: 温和
+    HP: 1.0
+    Attack: 0.9
+    Defense: 1.0
+    Sp_Attack: 1.1
+    Sp_Defense: 1.0
+    Speed: 1.0
+  - name: 冷静
+    HP: 1.0
+    Attack: 1.0
+    Defense: 0.9
+    Sp_Attack: 1.1
+    Sp_Defense: 1.0
+    Speed: 1.0
+  - name: 内敛
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 1.1
+    Sp_Defense: 1.0
+    Speed: 0.9
+  - name: 害羞
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 1.0
+  - name: 马虎
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 1.1
+    Sp_Defense: 0.9
+    Speed: 1.0
+  - name: 沉着
+    HP: 1.0
+    Attack: 0.9
+    Defense: 1.0
+    Sp_Attack: 1.0
+    Sp_Defense: 1.1
+    Speed: 1.0
+  - name: 温顺
+    HP: 1.0
+    Attack: 1.0
+    Defense: 0.9
+    Sp_Attack: 1.0
+    Sp_Defense: 1.1
+    Speed: 1.0
+  - name: 慎重
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 0.9
+    Sp_Defense: 1.1
+    Speed: 1.0
+  - name: 浮躁
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 0.9
+    Sp_Defense: 1.1
+    Speed: 1.0
+  - name: 古怪
+    HP: 1.0
+    Attack: 1.0
+    Defense: 1.0
+    Sp_Attack: 1.0
+    Sp_Defense: 1.0
+    Speed: 1.0

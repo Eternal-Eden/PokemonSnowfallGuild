@@ -1,0 +1,70 @@
+# Pokemon对战模板
+
+id: '1761289470855458'
+# 模板信息
+metadata:
+  name: 喵喵伤害计算模板
+  version: 1.0.0
+  created_at: '2025-10-24T07:04:30.855Z'
+  generator: LuoXue Template Creator
+
+# Pokemon基本信息
+pokemon:
+  id: 52
+  name: 喵喵
+  types:
+    - Normal
+  types_chinese:
+    - 一般
+
+# 配置信息
+configuration:
+  level: 50  # 等级
+  nature: 急躁  # 性格
+  ability:  # 特性 (进攻特性)
+    name: 技术高手  # 攻击时可以将低威力招式的威力提高。
+    index: '101'
+    common_count: 13
+    hidden_count: 11
+    isSpecial: true
+    specialType: offensive
+    effect: 威力60或以下的招式伤害增加1.5倍  # 特殊效果
+    trigger_condition: 使用威力60或以下的招式
+    note: 第五世代现有特性
+  item: 属性宝石  # 道具
+  moves:  # 技能
+    - 连续拳
+    - 利爪
+    - 手刀
+    - 飞翔
+
+# 能力值
+stats:
+  # 努力值 (总和≤510)
+  evs:
+    hp: 52
+    attack: 60
+    defense: 80
+    special_attack: 64
+    special_defense: 76
+    speed: 176
+  # 个体值 (0-31)
+  ivs:
+    hp: 31
+    attack: 31
+    defense: 31
+    special_attack: 31
+    special_defense: 31
+    speed: 31
+  # 计算后的最终能力值
+  calculated_stats:
+    hp: 122
+    attack: 73
+    defense: 58
+    special_attack: 68
+    special_defense: 70
+    speed: 145
+
+# 设置
+settings:
+  is_public: true
